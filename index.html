@@ -31,7 +31,7 @@ body { font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR', sans
 .btn-down { display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; background: white; color: #0a592c; border: 1.5px solid #0a592c; padding: 9px; border-radius: 2px; font-size: 13px; font-weight: 700; cursor: pointer; text-decoration: none; transition: all 0.2s; letter-spacing: 0.3px; }
 .btn-down:hover { background: #0a592c; color: white; }
 .footer { text-align: right; padding: 20px 4px 10px; font-size: 11px; color: #a19660; letter-spacing: 0.5px; font-weight: 600; }
-.modal-overlay { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.88); z-index: 1000; justify-content: center; align-items: center; }
+.modal-overlay { display: none; position: fixed; top:0; left:0; width:100vw; height:100vh; background: rgba(0,0,0,0.92); z-index: 99999; justify-content: center; align-items: center; overflow: hidden; }
 .modal-overlay.active { display: flex; }
 .modal-box { position: relative; max-width: 90vw; max-height: 90vh; }
 .modal-box img { max-width: 90vw; max-height: 80vh; object-fit: contain; border-radius: 3px; display: block; transition: opacity 0.15s ease; }
@@ -138,74 +138,60 @@ async function downloadAll() {
 <div class="footer">© 2025 하맘컨텐츠 All rights reserved. | 데오럭스(주) 공식 마케팅 파트너</div>
 
 <!-- 슬라이드 미리보기 모달 -->
-<div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
-  <div class="modal-box">
-    <button class="modal-close" onclick="document.getElementById('modalOverlay').classList.remove('active')">✕</button>
-    <button class="modal-nav modal-prev" onclick="slideModal(-1)">&#8249;</button>
-    <button class="modal-nav modal-next" onclick="slideModal(1)">&#8250;</button>
-    <img id="modalImg" src="" alt="">
-    <div class="modal-info">
-      <span id="modalTitle"></span>
-      <a id="modalDownload" class="modal-download" href="" download="" target="_blank">⬇ 다운로드</a>
+<div id="modalOverlay" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.92);z-index:99999;align-items:center;justify-content:center;">
+  <div style="position:relative;max-width:92vw;max-height:92vh;display:flex;flex-direction:column;align-items:center;">
+    <button onclick="document.getElementById('modalOverlay').style.display='none'" style="position:absolute;top:-16px;right:-16px;background:#b81c2b;color:white;border:none;border-radius:50%;width:34px;height:34px;font-size:20px;cursor:pointer;z-index:10;font-weight:700;line-height:1;">✕</button>
+    <button onclick="slideModal(-1)" style="position:absolute;left:-28px;top:50%;transform:translateY(-50%);background:rgba(10,89,44,0.9);color:white;border:none;width:46px;height:46px;font-size:32px;cursor:pointer;border-radius:50%;z-index:10;display:flex;align-items:center;justify-content:center;">&#8249;</button>
+    <button onclick="slideModal(1)" style="position:absolute;right:-28px;top:50%;transform:translateY(-50%);background:rgba(10,89,44,0.9);color:white;border:none;width:46px;height:46px;font-size:32px;cursor:pointer;border-radius:50%;z-index:10;display:flex;align-items:center;justify-content:center;">&#8250;</button>
+    <img id="modalImg" src="" style="max-width:88vw;max-height:75vh;object-fit:contain;border-radius:4px;display:block;">
+    <div style="background:#0a592c;color:white;padding:10px 18px;width:100%;display:flex;justify-content:space-between;align-items:center;border-top:2px solid #b81c2b;border-radius:0 0 4px 4px;margin-top:0;">
+      <span id="modalTitle" style="font-size:14px;font-weight:600;"></span>
+      <a id="modalDownload" href="" download="" target="_blank" style="background:white;color:#0a592c;padding:6px 14px;border-radius:2px;font-size:13px;font-weight:700;text-decoration:none;">⬇ 다운로드</a>
     </div>
-    <div class="modal-dots" id="modalDots"></div>
+    <div id="modalDots" style="display:flex;gap:7px;padding:10px 0 4px;justify-content:center;"></div>
   </div>
 </div>
 
 <script>
-let currentIdx = 0;
-
+var currentIdx = 0;
 function openModal(idx) {
   currentIdx = idx;
   updateModal();
-  document.getElementById('modalOverlay').classList.add('active');
-  renderDots();
+  var o = document.getElementById('modalOverlay');
+  o.style.display = 'flex';
 }
-
 function updateModal() {
-  const img = images[currentIdx];
-  const el = document.getElementById('modalImg');
+  var img = images[currentIdx];
+  var el = document.getElementById('modalImg');
   el.style.opacity = '0';
-  setTimeout(() => {
-    el.src = img.url;
-    el.style.opacity = '1';
-  }, 150);
+  setTimeout(function(){ el.src = img.url; el.style.opacity = '1'; }, 120);
   document.getElementById('modalTitle').textContent = '씬 ' + img.num + ' — ' + img.title;
   document.getElementById('modalDownload').href = img.url;
   document.getElementById('modalDownload').download = img.filename;
-  renderDots();
+  var dots = document.getElementById('modalDots');
+  dots.innerHTML = images.map(function(_,i){
+    return '<span onclick="currentIdx='+i+';updateModal()" style="width:9px;height:9px;border-radius:50%;background:'+(i===currentIdx?'#a19660':'rgba(255,255,255,0.35)')+';cursor:pointer;display:inline-block;transition:background 0.2s;"></span>';
+  }).join('');
 }
-
 function slideModal(dir) {
   currentIdx = (currentIdx + dir + images.length) % images.length;
   updateModal();
 }
-
-function renderDots() {
-  const dots = document.getElementById('modalDots');
-  dots.innerHTML = images.map((_, i) =>
-    `<span class="dot ${i === currentIdx ? 'active' : ''}" onclick="currentIdx=${i};updateModal()"></span>`
-  ).join('');
-}
-
-function closeModal(e) {
-  if (e.target === document.getElementById('modalOverlay')) {
-    document.getElementById('modalOverlay').classList.remove('active');
-  }
-}
-
-document.addEventListener('keydown', function(e) {
-  if (e.key === 'Escape') document.getElementById('modalOverlay').classList.remove('active');
-  if (e.key === 'ArrowLeft') slideModal(-1);
-  if (e.key === 'ArrowRight') slideModal(1);
+document.getElementById('modalOverlay').addEventListener('click', function(e){
+  if(e.target === this) this.style.display = 'none';
 });
-
-// 터치 스와이프
-let touchStartX = 0;
-document.getElementById('modalOverlay').addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; });
-document.getElementById('modalOverlay').addEventListener('touchend', e => {
-  const diff = touchStartX - e.changedTouches[0].clientX;
-  if (Math.abs(diff) > 50) slideModal(diff > 0 ? 1 : -1);
+document.addEventListener('keydown', function(e){
+  var o = document.getElementById('modalOverlay');
+  if(o.style.display === 'none') return;
+  if(e.key==='Escape') o.style.display='none';
+  if(e.key==='ArrowLeft') slideModal(-1);
+  if(e.key==='ArrowRight') slideModal(1);
+});
+var touchStartX = 0;
+document.getElementById('modalOverlay').addEventListener('touchstart', function(e){ touchStartX = e.touches[0].clientX; });
+document.getElementById('modalOverlay').addEventListener('touchend', function(e){
+  var diff = touchStartX - e.changedTouches[0].clientX;
+  if(Math.abs(diff) > 50) slideModal(diff > 0 ? 1 : -1);
 });
 </script>
 
