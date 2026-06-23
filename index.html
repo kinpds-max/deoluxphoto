@@ -21,15 +21,15 @@ body { font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR', sans
 .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
 .card { background: white; border-radius: 3px; overflow: hidden; box-shadow: 0 1px 6px rgba(0,0,0,0.08); border-top: 3px solid #0a592c; transition: transform 0.2s, box-shadow 0.2s; }
 .card:hover { transform: translateY(-2px); box-shadow: 0 4px 14px rgba(10,89,44,0.15); }
-.img-wrap { position: relative; height: 175px; background: #eee; overflow: hidden; cursor: pointer; }
+.img-wrap { position: relative; height: 175px; background: #eee; overflow: hidden; cursor: zoom-in; }
 .img-wrap img { width: 100%; height: 100%; object-fit: cover; transition: opacity 0.2s; }
 .img-wrap:hover img { opacity: 0.88; }
 .img-num { position: absolute; top: 8px; left: 8px; background: #0a592c; color: white; font-size: 11px; font-weight: 800; padding: 3px 8px; border-radius: 2px; letter-spacing: 1px; }
 .preview-hint { position: absolute; bottom: 8px; right: 8px; background: rgba(10,89,44,0.85); color: white; font-size: 10px; padding: 3px 7px; border-radius: 2px; }
 .card-body { padding: 12px; }
 .card-title { font-size: 14px; font-weight: 600; color: #0a592c; margin-bottom: 10px; letter-spacing: -0.2px; }
-.btn-down { display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; background: white; color: #0a592c; border: 1.5px solid #0a592c; padding: 9px; border-radius: 2px; font-size: 13px; font-weight: 700; cursor: pointer; text-decoration: none; transition: all 0.2s; letter-spacing: 0.3px; }
-.btn-down:hover { background: #0a592c; color: white; }
+
+
 .footer { text-align: right; padding: 20px 4px 10px; font-size: 11px; color: #a19660; letter-spacing: 0.5px; font-weight: 600; }
 .modal-overlay { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.88); z-index: 1000; justify-content: center; align-items: center; }
 .modal-overlay.active { display: flex; }
@@ -105,11 +105,10 @@ images.forEach((img, idx) => {
       <div class="img-wrap" onclick="openModal(idx)">
         <img src="${img.url}" alt="${img.title}" loading="lazy" onerror="this.parentElement.style.background='#eee'">
         <span class="img-num">씬 ${img.num}</span>
-        <span class="preview-hint">🔍 미리보기</span>
+        <span class="preview-hint">🔍 확대보기</span>
       </div>
       <div class="card-body">
         <div class="card-title">${img.title}</div>
-        <a class="btn-down" href="${img.url}" download="${img.filename}" target="_blank">⬇ 다운로드</a>
       </div>
     </div>`;
 });
@@ -137,43 +136,70 @@ async function downloadAll() {
 </script>
 <div class="footer">© 2025 하맘컨텐츠 All rights reserved. | 데오럭스(주) 공식 마케팅 파트너</div>
 
-<!-- 슬라이드 미리보기 모달 -->
-<div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
-  <div class="modal-box">
-    <button class="modal-close" onclick="document.getElementById('modalOverlay').classList.remove('active')">✕</button>
-    <button class="modal-nav modal-prev" onclick="slideModal(-1)">&#8249;</button>
-    <button class="modal-nav modal-next" onclick="slideModal(1)">&#8250;</button>
-    <img id="modalImg" src="" alt="">
-    <div class="modal-info">
-      <span id="modalTitle"></span>
-      <a id="modalDownload" class="modal-download" href="" download="" target="_blank">⬇ 다운로드</a>
+<!-- 이미지 확대 모달 -->
+<div id="modalOverlay" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.93);z-index:99999;align-items:center;justify-content:center;flex-direction:column;">
+
+  <!-- 상단 툴바 -->
+  <div style="width:100%;display:flex;justify-content:space-between;align-items:center;padding:12px 20px;position:absolute;top:0;left:0;z-index:10;">
+    <span id="modalTitle" style="color:white;font-size:15px;font-weight:600;letter-spacing:-0.2px;"></span>
+    <div style="display:flex;gap:10px;align-items:center;">
+      <a id="modalDownload" href="" download="" target="_blank"
+        style="background:#0a592c;color:white;padding:8px 18px;border-radius:3px;font-size:13px;font-weight:700;text-decoration:none;border:none;cursor:pointer;letter-spacing:0.3px;">
+        ⬇ 다운로드
+      </a>
+      <button onclick="closeModalFn()"
+        style="background:#b81c2b;color:white;border:none;border-radius:50%;width:36px;height:36px;font-size:20px;cursor:pointer;font-weight:700;display:flex;align-items:center;justify-content:center;line-height:1;">
+        ✕
+      </button>
     </div>
-    <div class="modal-dots" id="modalDots"></div>
+  </div>
+
+  <!-- 이미지 영역 -->
+  <div style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;padding:60px 60px 80px;">
+    <button onclick="slideModal(-1)"
+      style="position:absolute;left:12px;top:50%;transform:translateY(-50%);background:rgba(10,89,44,0.85);color:white;border:none;width:48px;height:48px;font-size:34px;cursor:pointer;border-radius:50%;display:flex;align-items:center;justify-content:center;z-index:10;">&#8249;</button>
+    <img id="modalImg" src="" alt=""
+      style="max-width:88vw;max-height:80vh;object-fit:contain;border-radius:4px;display:block;transition:opacity 0.15s ease;box-shadow:0 8px 40px rgba(0,0,0,0.5);">
+    <button onclick="slideModal(1)"
+      style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:rgba(10,89,44,0.85);color:white;border:none;width:48px;height:48px;font-size:34px;cursor:pointer;border-radius:50%;display:flex;align-items:center;justify-content:center;z-index:10;">&#8250;</button>
+  </div>
+
+  <!-- 하단 도트 + 카운터 -->
+  <div style="position:absolute;bottom:16px;left:0;width:100%;display:flex;flex-direction:column;align-items:center;gap:8px;">
+    <div id="modalDots" style="display:flex;gap:7px;"></div>
+    <span id="modalCounter" style="color:rgba(255,255,255,0.5);font-size:12px;"></span>
   </div>
 </div>
 
 <script>
-let currentIdx = 0;
+var currentIdx = 0;
 
 function openModal(idx) {
   currentIdx = idx;
   updateModal();
-  document.getElementById('modalOverlay').classList.add('active');
-  renderDots();
+  var o = document.getElementById('modalOverlay');
+  o.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+
+function closeModalFn() {
+  document.getElementById('modalOverlay').style.display = 'none';
+  document.body.style.overflow = '';
 }
 
 function updateModal() {
-  const img = images[currentIdx];
-  const el = document.getElementById('modalImg');
+  var img = images[currentIdx];
+  var el = document.getElementById('modalImg');
   el.style.opacity = '0';
-  setTimeout(() => {
-    el.src = img.url;
-    el.style.opacity = '1';
-  }, 150);
+  setTimeout(function() { el.src = img.url; el.style.opacity = '1'; }, 120);
   document.getElementById('modalTitle').textContent = '씬 ' + img.num + ' — ' + img.title;
   document.getElementById('modalDownload').href = img.url;
   document.getElementById('modalDownload').download = img.filename;
-  renderDots();
+  document.getElementById('modalCounter').textContent = (currentIdx + 1) + ' / ' + images.length;
+  var dots = document.getElementById('modalDots');
+  dots.innerHTML = images.map(function(_, i) {
+    return '<span onclick="currentIdx='+i+';updateModal()" style="width:8px;height:8px;border-radius:50%;background:'+(i===currentIdx?'#a19660':'rgba(255,255,255,0.3)')+';cursor:pointer;display:inline-block;transition:background 0.2s;"></span>';
+  }).join('');
 }
 
 function slideModal(dir) {
@@ -181,30 +207,21 @@ function slideModal(dir) {
   updateModal();
 }
 
-function renderDots() {
-  const dots = document.getElementById('modalDots');
-  dots.innerHTML = images.map((_, i) =>
-    `<span class="dot ${i === currentIdx ? 'active' : ''}" onclick="currentIdx=${i};updateModal()"></span>`
-  ).join('');
-}
-
-function closeModal(e) {
-  if (e.target === document.getElementById('modalOverlay')) {
-    document.getElementById('modalOverlay').classList.remove('active');
-  }
-}
+document.getElementById('modalOverlay').addEventListener('click', function(e) {
+  if (e.target === this) closeModalFn();
+});
 
 document.addEventListener('keydown', function(e) {
-  if (e.key === 'Escape') document.getElementById('modalOverlay').classList.remove('active');
+  if (document.getElementById('modalOverlay').style.display === 'none') return;
+  if (e.key === 'Escape') closeModalFn();
   if (e.key === 'ArrowLeft') slideModal(-1);
   if (e.key === 'ArrowRight') slideModal(1);
 });
 
-// 터치 스와이프
-let touchStartX = 0;
-document.getElementById('modalOverlay').addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; });
-document.getElementById('modalOverlay').addEventListener('touchend', e => {
-  const diff = touchStartX - e.changedTouches[0].clientX;
+var touchStartX = 0;
+document.getElementById('modalOverlay').addEventListener('touchstart', function(e) { touchStartX = e.touches[0].clientX; });
+document.getElementById('modalOverlay').addEventListener('touchend', function(e) {
+  var diff = touchStartX - e.changedTouches[0].clientX;
   if (Math.abs(diff) > 50) slideModal(diff > 0 ? 1 : -1);
 });
 </script>
