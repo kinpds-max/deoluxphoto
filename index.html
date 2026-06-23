@@ -29,6 +29,16 @@ body { font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR', sans
 .btn-down:hover { background: #1c4537; color: white; }
 .footer { text-align: right; padding: 20px 4px 10px; font-size: 11px; color: #aaa; letter-spacing: 0.5px; }
 
+
+.modal-nav { position: absolute; top: 50%; transform: translateY(-60%); background: rgba(28,69,55,0.85); color: white; border: none; width: 44px; height: 44px; font-size: 28px; cursor: pointer; border-radius: 50%; display: flex; align-items: center; justify-content: center; z-index: 10; transition: background 0.2s; }
+.modal-nav:hover { background: #1c4537; }
+.modal-prev { left: -22px; }
+.modal-next { right: -22px; }
+.modal-dots { display: flex; justify-content: center; gap: 6px; padding: 8px 0 2px; }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.4); cursor: pointer; transition: background 0.2s; }
+.dot.active { background: white; }
+#modalImg { transition: opacity 0.15s ease; }
+
 .modal-overlay { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.85); z-index: 1000; justify-content: center; align-items: center; }
 .modal-overlay.active { display: flex; }
 .modal-box { position: relative; max-width: 90vw; max-height: 90vh; }
@@ -95,10 +105,10 @@ const images = [
 ];
 
 const grid = document.getElementById('grid');
-images.forEach(img => {
+images.forEach((img, idx) => {
   grid.innerHTML += `
     <div class="card">
-      <div class="img-wrap" onclick="openModal('${img.url}', '씬 ${img.num} ${img.title}', '${img.filename}')">
+      <div class="img-wrap" onclick="openModal(idx)">
         <img src="${img.url}" alt="${img.title}" loading="lazy" onerror="this.parentElement.style.background='#eee'">
         <span class="img-num">씬 ${img.num}</span>
         <span class="preview-hint">🔍 미리보기</span>
@@ -133,33 +143,75 @@ async function downloadAll() {
 </script>
 <div class="footer">© 2025 하맘컨텐츠 All rights reserved. | 데오럭스(주) 공식 마케팅 파트너</div>
 
-<!-- 미리보기 모달 -->
+<!-- 슬라이드 미리보기 모달 -->
 <div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
   <div class="modal-box">
     <button class="modal-close" onclick="document.getElementById('modalOverlay').classList.remove('active')">✕</button>
+    <button class="modal-nav modal-prev" onclick="slideModal(-1)">&#8249;</button>
+    <button class="modal-nav modal-next" onclick="slideModal(1)">&#8250;</button>
     <img id="modalImg" src="" alt="">
     <div class="modal-info">
       <span id="modalTitle"></span>
       <a id="modalDownload" class="modal-download" href="" download="" target="_blank">⬇ 다운로드</a>
     </div>
+    <div class="modal-dots" id="modalDots"></div>
   </div>
 </div>
 
 <script>
-function openModal(url, title, filename) {
-  document.getElementById('modalImg').src = url;
-  document.getElementById('modalTitle').textContent = title;
-  document.getElementById('modalDownload').href = url;
-  document.getElementById('modalDownload').download = filename;
+let currentIdx = 0;
+
+function openModal(idx) {
+  currentIdx = idx;
+  updateModal();
   document.getElementById('modalOverlay').classList.add('active');
+  renderDots();
 }
+
+function updateModal() {
+  const img = images[currentIdx];
+  const el = document.getElementById('modalImg');
+  el.style.opacity = '0';
+  setTimeout(() => {
+    el.src = img.url;
+    el.style.opacity = '1';
+  }, 150);
+  document.getElementById('modalTitle').textContent = '씬 ' + img.num + ' — ' + img.title;
+  document.getElementById('modalDownload').href = img.url;
+  document.getElementById('modalDownload').download = img.filename;
+  renderDots();
+}
+
+function slideModal(dir) {
+  currentIdx = (currentIdx + dir + images.length) % images.length;
+  updateModal();
+}
+
+function renderDots() {
+  const dots = document.getElementById('modalDots');
+  dots.innerHTML = images.map((_, i) =>
+    `<span class="dot ${i === currentIdx ? 'active' : ''}" onclick="currentIdx=${i};updateModal()"></span>`
+  ).join('');
+}
+
 function closeModal(e) {
   if (e.target === document.getElementById('modalOverlay')) {
     document.getElementById('modalOverlay').classList.remove('active');
   }
 }
+
 document.addEventListener('keydown', function(e) {
   if (e.key === 'Escape') document.getElementById('modalOverlay').classList.remove('active');
+  if (e.key === 'ArrowLeft') slideModal(-1);
+  if (e.key === 'ArrowRight') slideModal(1);
+});
+
+// 터치 스와이프
+let touchStartX = 0;
+document.getElementById('modalOverlay').addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; });
+document.getElementById('modalOverlay').addEventListener('touchend', e => {
+  const diff = touchStartX - e.changedTouches[0].clientX;
+  if (Math.abs(diff) > 50) slideModal(diff > 0 ? 1 : -1);
 });
 </script>
 
