@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>데오럭스 공간소개 이미지 다운로드</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; background: #f0f2f5; padding: 20px; }
+.header { background: #1B3A2D; color: white; padding: 20px 28px; border-radius: 14px; margin-bottom: 20px; display: flex; align-items: center; gap: 14px; }
+.logo-badge { background: #C9A63E; color: #1B3A2D; font-size: 18px; font-weight: 900; padding: 8px 14px; border-radius: 8px; white-space: nowrap; }
+.header-text h1 { font-size: 18px; font-weight: 700; }
+.header-text p { font-size: 12px; opacity: 0.75; margin-top: 4px; }
+.btn-all { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; background: #C9A63E; color: #1B3A2D; border: none; padding: 16px; border-radius: 12px; font-size: 17px; font-weight: 800; cursor: pointer; margin-bottom: 12px; }
+.btn-all:hover { background: #b8952e; }
+.progress-wrap { margin-bottom: 20px; display: none; }
+.progress-bar { background: #e0e0e0; border-radius: 8px; height: 10px; }
+.progress-fill { background: #1B3A2D; height: 10px; border-radius: 8px; width: 0%; transition: width 0.3s; }
+.progress-text { text-align: center; font-size: 13px; color: #555; margin-top: 8px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+.card { background: white; border-radius: 14px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.08); }
+.img-wrap { position: relative; height: 175px; background: #ddd; overflow: hidden; }
+.img-wrap img { width: 100%; height: 100%; object-fit: cover; }
+.img-num { position: absolute; top: 8px; left: 8px; background: #1B3A2D; color: #C9A63E; font-size: 11px; font-weight: 800; padding: 3px 8px; border-radius: 5px; }
+.card-body { padding: 12px; }
+.card-title { font-size: 14px; font-weight: 700; color: #1a1a1a; margin-bottom: 10px; }
+.btn-down { display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; background: #1B3A2D; color: white; border: none; padding: 9px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; text-decoration: none; }
+.btn-down:hover { background: #2d5c47; }
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="logo-badge">DEOLUX★</div>
+  <div class="header-text">
+    <h1>데오럭스 공간소개 이미지 패키지</h1>
+    <p>입시컨설팅 공간소개 영상용 · 동선 순서 12장 · 최신 완성본</p>
+  </div>
+</div>
+
+<button class="btn-all" onclick="downloadAll()">⬇ 전체 12장 한번에 다운로드</button>
+<div class="progress-wrap" id="progressWrap">
+  <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+  <div class="progress-text" id="progressText"></div>
+</div>
+
+<div class="grid" id="grid"></div>
+
+<script>
+const images = [
+  { num:"01", title:"외관 전경", filename:"01_외관전경.png",
+    url:"https://d2ol7oe51mr4n9.cloudfront.net/user_38vbAv9qgw2UH7cP3nl562ZKIOp/d011edc7-53f9-45a2-8bbf-09418d695ec1.png" },
+  { num:"02", title:"5층 입구 간판", filename:"02_5층입구.jpeg",
+    url:"https://d8j0ntlcm91z4.cloudfront.net/user_38vbAv9qgw2UH7cP3nl562ZKIOp/hf_20260623_015044_3c9b3d0a-ca17-48a1-9b21-9d61bba8f707.jpeg" },
+  { num:"03", title:"리셉션 / 로비", filename:"03_리셉션로비.png",
+    url:"https://d8j0ntlcm91z4.cloudfront.net/user_38vbAv9qgw2UH7cP3nl562ZKIOp/hf_20260622_114643_1b759869-919d-43b1-b100-9e5e30b2b039.png" },
+  { num:"04", title:"리셉션 카운터", filename:"04_리셉션카운터.png",
+    url:"https://d8j0ntlcm91z4.cloudfront.net/user_38vbAv9qgw2UH7cP3nl562ZKIOp/hf_20260622_114648_32790527-8666-429c-993a-f23e8d2eadde.png" },
+  { num:"05", title:"복도 (DEOLUX★ 로고)", filename:"05_복도로고.png",
+    url:"https://d8j0ntlcm91z4.cloudfront.net/user_38vbAv9qgw2UH7cP3nl562ZKIOp/hf_20260622_114700_e08b8816-caa4-4ad6-886f-d0940250b472.png" },
+  { num:"06", title:"대형 상담실", filename:"06_대형상담실.png",
+    url:"https://d8j0ntlcm91z4.cloudfront.net/user_38vbAv9qgw2UH7cP3nl562ZKIOp/hf_20260622_114706_490d3c51-2012-4533-aa58-b5441e05da03.png" },
+  { num:"07", title:"책장 — 저서 / 인증서", filename:"07_책장저서.png",
+    url:"https://d8j0ntlcm91z4.cloudfront.net/user_38vbAv9qgw2UH7cP3nl562ZKIOp/hf_20260622_114718_898ecbec-1261-4608-8c9b-78be4b2f7a7e.png" },
+  { num:"08", title:"강의실 1", filename:"08_강의실1.png",
+    url:"https://d8j0ntlcm91z4.cloudfront.net/user_38vbAv9qgw2UH7cP3nl562ZKIOp/hf_20260622_114723_9a97dd40-73ca-42f8-8b20-5169f71fe2ee.png" },
+  { num:"09", title:"강의실 2", filename:"09_강의실2.png",
+    url:"https://d8j0ntlcm91z4.cloudfront.net/user_38vbAv9qgw2UH7cP3nl562ZKIOp/hf_20260622_114729_0287ea52-63b3-4e06-8ca1-b6c8ac59a95e.png" },
+  { num:"10", title:"강의실 3 — 프로젝터", filename:"10_강의실3.png",
+    url:"https://d8j0ntlcm91z4.cloudfront.net/user_38vbAv9qgw2UH7cP3nl562ZKIOp/hf_20260622_114735_3fb2d9d7-01eb-4e82-b6a2-3862a876c71a.png" },
+  { num:"11", title:"강의실 4 — 프로젝터 B", filename:"11_강의실4.png",
+    url:"https://d8j0ntlcm91z4.cloudfront.net/user_38vbAv9qgw2UH7cP3nl562ZKIOp/hf_20260622_105614_5fd713bc-5a36-4e85-9297-5d658d34867d.png" },
+  { num:"12", title:"외관 원본사진 (간판)", filename:"12_외관원본_입구.png",
+    url:"https://d2ol7oe51mr4n9.cloudfront.net/user_38vbAv9qgw2UH7cP3nl562ZKIOp/7bbe8d92-4c91-40b4-a81b-9368328c08b8.png" },
+];
+
+const grid = document.getElementById('grid');
+images.forEach(img => {
+  grid.innerHTML += `
+    <div class="card">
+      <div class="img-wrap">
+        <img src="${img.url}" alt="${img.title}" loading="lazy" onerror="this.parentElement.style.background='#eee'">
+        <span class="img-num">씬 ${img.num}</span>
+      </div>
+      <div class="card-body">
+        <div class="card-title">${img.title}</div>
+        <a class="btn-down" href="${img.url}" download="${img.filename}" target="_blank">⬇ 다운로드</a>
+      </div>
+    </div>`;
+});
+
+async function downloadAll() {
+  const wrap = document.getElementById('progressWrap');
+  const fill = document.getElementById('progressFill');
+  const text = document.getElementById('progressText');
+  wrap.style.display = 'block';
+  for (let i = 0; i < images.length; i++) {
+    const img = images[i];
+    text.textContent = `다운로드 중... ${i+1} / ${images.length} — ${img.title}`;
+    fill.style.width = ((i+1)/images.length*100) + '%';
+    const a = document.createElement('a');
+    a.href = img.url;
+    a.download = img.filename;
+    a.target = '_blank';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    await new Promise(r => setTimeout(r, 900));
+  }
+  text.textContent = '✅ 전체 12장 다운로드 완료!';
+}
+</script>
+</body>
+</html>
