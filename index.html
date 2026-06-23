@@ -137,37 +137,28 @@ async function downloadAll() {
 <div class="footer">© 2025 하맘컨텐츠 All rights reserved. | 데오럭스(주) 공식 마케팅 파트너</div>
 
 <!-- 이미지 확대 모달 -->
-<div id="modalOverlay" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.93);z-index:99999;align-items:center;justify-content:center;flex-direction:column;">
+<div id="modalOverlay" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:#000;z-index:999999;flex-direction:column;">
 
-  <!-- 상단 툴바 -->
-  <div style="width:100%;display:flex;justify-content:space-between;align-items:center;padding:12px 20px;position:absolute;top:0;left:0;z-index:10;">
-    <span id="modalTitle" style="color:white;font-size:15px;font-weight:600;letter-spacing:-0.2px;"></span>
+  <!-- 상단 바 -->
+  <div style="position:absolute;top:0;left:0;right:0;height:56px;background:rgba(10,89,44,0.95);display:flex;align-items:center;justify-content:space-between;padding:0 16px;z-index:10;border-bottom:2px solid #b81c2b;">
+    <span id="modalTitle" style="color:white;font-size:15px;font-weight:700;letter-spacing:-0.2px;max-width:60%;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;"></span>
     <div style="display:flex;gap:10px;align-items:center;">
-      <a id="modalDownload" href="" download="" target="_blank"
-        style="background:#0a592c;color:white;padding:8px 18px;border-radius:3px;font-size:13px;font-weight:700;text-decoration:none;border:none;cursor:pointer;letter-spacing:0.3px;">
-        ⬇ 다운로드
-      </a>
-      <button onclick="closeModalFn()"
-        style="background:#b81c2b;color:white;border:none;border-radius:50%;width:36px;height:36px;font-size:20px;cursor:pointer;font-weight:700;display:flex;align-items:center;justify-content:center;line-height:1;">
-        ✕
-      </button>
+      <span id="modalCounter" style="color:rgba(255,255,255,0.7);font-size:13px;margin-right:6px;"></span>
+      <a id="modalDownload" href="" download="" target="_blank" style="background:white;color:#0a592c;padding:7px 16px;border-radius:3px;font-size:13px;font-weight:700;text-decoration:none;white-space:nowrap;">⬇ 저장</a>
+      <button onclick="closeModalFn()" style="background:#b81c2b;color:white;border:none;border-radius:50%;width:34px;height:34px;font-size:18px;cursor:pointer;font-weight:700;flex-shrink:0;">✕</button>
     </div>
   </div>
 
   <!-- 이미지 영역 -->
-  <div style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;padding:60px 60px 80px;">
-    <button onclick="slideModal(-1)"
-      style="position:absolute;left:12px;top:50%;transform:translateY(-50%);background:rgba(10,89,44,0.85);color:white;border:none;width:48px;height:48px;font-size:34px;cursor:pointer;border-radius:50%;display:flex;align-items:center;justify-content:center;z-index:10;">&#8249;</button>
-    <img id="modalImg" src="" alt=""
-      style="max-width:88vw;max-height:80vh;object-fit:contain;border-radius:4px;display:block;transition:opacity 0.15s ease;box-shadow:0 8px 40px rgba(0,0,0,0.5);">
-    <button onclick="slideModal(1)"
-      style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:rgba(10,89,44,0.85);color:white;border:none;width:48px;height:48px;font-size:34px;cursor:pointer;border-radius:50%;display:flex;align-items:center;justify-content:center;z-index:10;">&#8250;</button>
+  <div style="position:absolute;top:56px;left:0;right:0;bottom:56px;display:flex;align-items:center;justify-content:center;">
+    <button onclick="slideModal(-1)" style="position:absolute;left:10px;z-index:5;background:rgba(10,89,44,0.8);color:white;border:none;width:52px;height:52px;font-size:36px;cursor:pointer;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;">&#8249;</button>
+    <img id="modalImg" src="" alt="" style="max-width:calc(100% - 140px);max-height:100%;object-fit:contain;display:block;transition:opacity 0.12s ease;">
+    <button onclick="slideModal(1)" style="position:absolute;right:10px;z-index:5;background:rgba(10,89,44,0.8);color:white;border:none;width:52px;height:52px;font-size:36px;cursor:pointer;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;">&#8250;</button>
   </div>
 
-  <!-- 하단 도트 + 카운터 -->
-  <div style="position:absolute;bottom:16px;left:0;width:100%;display:flex;flex-direction:column;align-items:center;gap:8px;">
-    <div id="modalDots" style="display:flex;gap:7px;"></div>
-    <span id="modalCounter" style="color:rgba(255,255,255,0.5);font-size:12px;"></span>
+  <!-- 하단 썸네일 스트립 -->
+  <div style="position:absolute;bottom:0;left:0;right:0;height:56px;background:rgba(0,0,0,0.85);display:flex;align-items:center;justify-content:center;gap:6px;padding:0 8px;overflow-x:auto;">
+    <div id="modalThumbs" style="display:flex;gap:6px;align-items:center;"></div>
   </div>
 </div>
 
@@ -176,10 +167,11 @@ var currentIdx = 0;
 
 function openModal(idx) {
   currentIdx = idx;
-  updateModal();
   var o = document.getElementById('modalOverlay');
   o.style.display = 'flex';
   document.body.style.overflow = 'hidden';
+  renderThumbs();
+  updateModal();
 }
 
 function closeModalFn() {
@@ -191,14 +183,29 @@ function updateModal() {
   var img = images[currentIdx];
   var el = document.getElementById('modalImg');
   el.style.opacity = '0';
-  setTimeout(function() { el.src = img.url; el.style.opacity = '1'; }, 120);
+  setTimeout(function() {
+    el.src = img.url;
+    el.onload = function() { el.style.opacity = '1'; };
+  }, 100);
   document.getElementById('modalTitle').textContent = '씬 ' + img.num + ' — ' + img.title;
   document.getElementById('modalDownload').href = img.url;
   document.getElementById('modalDownload').download = img.filename;
   document.getElementById('modalCounter').textContent = (currentIdx + 1) + ' / ' + images.length;
-  var dots = document.getElementById('modalDots');
-  dots.innerHTML = images.map(function(_, i) {
-    return '<span onclick="currentIdx='+i+';updateModal()" style="width:8px;height:8px;border-radius:50%;background:'+(i===currentIdx?'#a19660':'rgba(255,255,255,0.3)')+';cursor:pointer;display:inline-block;transition:background 0.2s;"></span>';
+  // 썸네일 활성화
+  var thumbs = document.querySelectorAll('.modal-thumb');
+  thumbs.forEach(function(t, i) {
+    t.style.outline = i === currentIdx ? '2px solid #a19660' : '2px solid transparent';
+    t.style.opacity = i === currentIdx ? '1' : '0.5';
+  });
+  // 활성 썸네일 스크롤
+  if (thumbs[currentIdx]) thumbs[currentIdx].scrollIntoView({block:'nearest',inline:'center',behavior:'smooth'});
+}
+
+function renderThumbs() {
+  var strip = document.getElementById('modalThumbs');
+  strip.innerHTML = images.map(function(img, i) {
+    return '<img class="modal-thumb" src="' + img.url + '" onclick="currentIdx=' + i + ';updateModal()" ' +
+      'style="height:44px;width:70px;object-fit:cover;cursor:pointer;border-radius:3px;flex-shrink:0;outline:2px solid transparent;opacity:0.5;transition:all 0.2s;">';
   }).join('');
 }
 
@@ -219,11 +226,13 @@ document.addEventListener('keydown', function(e) {
 });
 
 var touchStartX = 0;
-document.getElementById('modalOverlay').addEventListener('touchstart', function(e) { touchStartX = e.touches[0].clientX; });
+document.getElementById('modalOverlay').addEventListener('touchstart', function(e) {
+  touchStartX = e.touches[0].clientX;
+}, {passive:true});
 document.getElementById('modalOverlay').addEventListener('touchend', function(e) {
   var diff = touchStartX - e.changedTouches[0].clientX;
   if (Math.abs(diff) > 50) slideModal(diff > 0 ? 1 : -1);
-});
+}, {passive:true});
 </script>
 
 </body>
